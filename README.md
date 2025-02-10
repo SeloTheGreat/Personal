@@ -52,4 +52,7 @@ This script performs a get request from specified url and writes it to a specifi
 
 Use `setup.bat` to set up the .cmd files to allow for quick access or optionally, manually use the .cmd files on their own
 
-If no arguments are provided to the cmds, they output help info
+Here is a list of all cmds:
+- vpip
+
+"help" as first argument provides info on each command
