@@ -19,14 +19,14 @@ goto sloop
 if exist %USERPROFILE%\AppData\Local\Programs\Python\Python%first%\ (
 	%USERPROFILE%\AppData\Local\Programs\Python\Python%first%\Scripts\pip%rest%
 ) else (
-	echo [EXITING]: First argument must be empty or an avaliable python version that exists on your system & exit /b
+	echo [EXITING]: First argument must be "help" or an avaliable python version that exists on your system & exit /b
 )
 
 exit /b
 
 :help
 echo [HELP]:
-echo First argument must be empty or an avaliable python version that exists on your system.
+echo First argument must be "help" or an avaliable python version that exists on your system.
 echo Via the first argument, the appropariate version of pythons pip will be executed with the rest of the arguments
 echo 'vpip 39 --version' : this will display the version of pip within python 3.9
 exit /b
