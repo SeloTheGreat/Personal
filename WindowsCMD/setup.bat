@@ -20,7 +20,7 @@ echo Creating new registry for User enviroment variable, Path
 set key="HKCU\Environment"
 for /F "usebackq tokens=2*" %%A in (`REG QUERY %key% /v PATH`) do set curr_path=%%B
 echo %curr_path% > user_path_bak.txt
-echo Created new User Path backup file at relative location ".\user_path_bak.txt"
+echo Created new User Path backup file at relative location "%cd%\user_path_bak.txt"
 echo If anything unfavorable happens, please refer to this file to manually restore the original User specific Path
 setx PATH "%curr_path%";%cmd_dir%
 
