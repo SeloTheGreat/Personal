@@ -32,3 +32,5 @@ echo Placing files into %cmd_dir%
 for %%f in (%from_dir%\*.*) do (
   if not exist "%cmd_dir%\%%~nxf" (copy "%%f" "%cmd_dir%\%%~nxf")
 )
+
+pause
