@@ -62,7 +62,7 @@ if option == 'E':
     print("WRITING TO FILE")
     f.write(file_contents)
     f.close()
-    print("TASK FINISHED")
+    input("... TASK FINISHED ...")
 elif option == 'D':
     f = open(FILE_NAME, 'r')
     s = f.read().split(ENTRY_KEY)
@@ -72,6 +72,6 @@ elif option == 'D':
         directory.mkdir()
     decode(s, directory)
     f.close()
-    print("TASK FINISHED")
+    input("... TASK FINISHED ...")
 else:
-    print("Invalid input, input must be 'E' or 'D'")
+    input("... Invalid input, input must be 'E' or 'D' ...")

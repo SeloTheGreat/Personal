@@ -29,4 +29,4 @@ for i in range(amount):
     file.close()
     conn.close()
     print(i, "COMPLETE")
-print("TASK COMPLETE")
+input("... TASK COMPLETE ...")

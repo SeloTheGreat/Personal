@@ -39,6 +39,14 @@ def encode_module(query):
     source1, sourceval, source2 = xmlproperty("ProtectedString", "Source", cdata(query.read_text()))
     return item1 + prop1 + name1 + nameval + name2 + source1 + sourceval + source2 + prop2 + item2
 
+def encode_script(query, runContext=0):
+    item1, item2 = xmlitem("Script")
+    prop1, prop2 = xmlproperties()
+    name1, nameval, name2 = xmlproperty("string", "Name", query.stem.split(".")[0])
+    context1, contextval, context2 = xmlproperty("token", "RunContext", runContext)
+    source1, sourceval, source2 = xmlproperty("ProtectedString", "Source", cdata(query.read_text()))
+    return item1 + prop1 + name1 + nameval + name2 + context1 + contextval + context2 + source1 + sourceval + source2 + prop2 + item2
+
 def encode(iterf, parent):
     print("IN DIRECTORY:", parent)
     
@@ -48,7 +56,14 @@ def encode(iterf, parent):
         if query.is_dir():
             folder_items.append(encode(query.iterdir, query))
         elif query.suffix == ".lua" or query.suffix == ".luau":
-            folder_items.append(encode_module(query))
+            if query.suffixes[0] == ".client":
+                folder_items.append(encode_script(query, 2))
+            elif query.suffixes[0] == ".server":
+                folder_items.append(encode_script(query, 1))
+            elif query.suffixes[0] == ".legacy":
+                folder_items.append(encode_script(query, 0))
+            else:
+                folder_items.append(encode_module(query))
             print("ENCODED:", query)
     folder_str = encode_folder(parent, folder_items)
 
@@ -65,4 +80,4 @@ file.write(
     source_start + "\n" + source + "\n" + source_end
 )
 file.close()
-print("FINISHED")
+input("... FINISHED ...")

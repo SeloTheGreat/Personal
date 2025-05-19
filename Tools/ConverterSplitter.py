@@ -33,7 +33,7 @@ if split_opt == "S":
         print("SPLIT:", new_file)
         counter += 1
     
-    print("TASK FINISHED")
+    input("... TASK FINISHED ...")
 elif split_opt == "M":
     folder = pathlib.Path(DIRECTORY)
     
@@ -53,6 +53,6 @@ elif split_opt == "M":
         counter += 1
     print("WRITING TO SPECIFIED FILE")
     file.write_text(contents)
-    print("TASK FINISHED")
+    input("... TASK FINISHED ...")
 else:
-    print("Invalid input, input must be 'S' or 'M'")
+    input("... Invalid input, input must be 'S' or 'M' ...")
