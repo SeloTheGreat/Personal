@@ -20,6 +20,7 @@ MDS = MarkdownIt("commonmark", {"linkify":True})
 TO_DIR = f"./r#{name}/"
 HTML = """<!DOCTYPE html>
 <html>
+<meta charset="UTF-8">
 <head>
 <title>r/%SUB%</title>
 
@@ -124,7 +125,7 @@ def get_comments(data):
     s = ""
     for x in children:
         v = x["data"]
-        message = MDS.render(v["body"])
+        message = MD.render(v["body"])
         votes = str(v["ups"] - v["downs"])
         auth = v["author"]
         if v.get("replies"):
@@ -206,6 +207,7 @@ for post in posts:
             print("ERR: FAILED TO FETCH OR WRITE COMMENTS")
             contents = contents.replace("%COMMENTS%", "FAILED TO FETCH COMMENTS")
         consecutive += 1
+        time.sleep(1)
     else:
         contents = contents.replace("%COMMENTS%", "")
 
