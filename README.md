@@ -1,3 +1,5 @@
+# VERY OUTDATED
+# DO NOT RELY ON THIS README
 ## This is my personal repo this is not intended for anything serious at all, mostly file manipulation
 
 # Dependencies
@@ -9,8 +11,6 @@
     - [re](https://docs.python.org/3.9/library/re.html)
 - Windows machine (for batch scripts)
 
-
-> *School Location = Turkey/Türkiye*
 
 # School
 
