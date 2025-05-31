@@ -21,42 +21,59 @@ def xmlproperty(property_type, name, value):
 def cdata(s):
     return f"<![CDATA[{s}]]>"
 
-def encode_folder(query, children):
+def encode_folder(query, children=""):
     item1, item2 = xmlitem("Folder")
     prop1, prop2 = xmlproperties()
     name1, nameval, name2 = xmlproperty("string", "Name", query.stem)
 
     return_item = item1 + prop1 + name1 + nameval + name2 + prop2
-    for v in children:
-        return_item += v
+    if children:
+        for v in children:
+            return_item += v
     
     return return_item + item2
 
-def encode_module(query):
+def encode_module(query, children="", name=""):
     item1, item2 = xmlitem("ModuleScript")
     prop1, prop2 = xmlproperties()
-    name1, nameval, name2 = xmlproperty("string", "Name", query.stem)
+    name1, nameval, name2 = xmlproperty("string", "Name", name or query.stem)
     source1, sourceval, source2 = xmlproperty("ProtectedString", "Source", cdata(query.read_text()))
-    return item1 + prop1 + name1 + nameval + name2 + source1 + sourceval + source2 + prop2 + item2
 
-def encode_script(query, runContext=0):
+    return_item = item1 + prop1 + name1 + nameval + name2 + source1 + sourceval + source2 + prop2
+    if children:
+        for v in children:
+            return_item += v
+    
+    return return_item + item2
+
+def encode_script(query, runContext=0, children="", name=""):
     item1, item2 = xmlitem("Script")
     prop1, prop2 = xmlproperties()
-    name1, nameval, name2 = xmlproperty("string", "Name", query.stem.split(".")[0])
+    name1, nameval, name2 = xmlproperty("string", "Name", name or query.stem.split(".")[0])
     context1, contextval, context2 = xmlproperty("token", "RunContext", runContext)
     source1, sourceval, source2 = xmlproperty("ProtectedString", "Source", cdata(query.read_text()))
-    return item1 + prop1 + name1 + nameval + name2 + context1 + contextval + context2 + source1 + sourceval + source2 + prop2 + item2
+
+    return_item = item1 + prop1 + name1 + nameval + name2 + context1 + contextval + context2 + source1 + sourceval + source2 + prop2
+    if children:
+        for v in children:
+            return_item += v
+    
+    return return_item + item2
 
 def encode(iterf, parent):
     print("IN DIRECTORY:", parent)
     
     folder_items = []
+
+    init_query = None
     
     for query in iterf():
         if query.is_dir():
             folder_items.append(encode(query.iterdir, query))
         elif query.suffix == ".lua" or query.suffix == ".luau":
-            if query.suffixes[0] == ".client":
+            if query.stem.split(".")[0] == "init":
+                init_query = query
+            elif query.suffixes[0] == ".client":
                 folder_items.append(encode_script(query, 2))
             elif query.suffixes[0] == ".server":
                 folder_items.append(encode_script(query, 1))
@@ -65,7 +82,17 @@ def encode(iterf, parent):
             else:
                 folder_items.append(encode_module(query))
             print("ENCODED:", query)
-    folder_str = encode_folder(parent, folder_items)
+    if init_query:
+        if init_query.suffixes[0] == ".client":
+            folder_str = encode_script(init_query, 2, folder_items, parent.stem)
+        elif init_query.suffixes[0] == ".server":
+            folder_str = encode_script(init_query, 1, folder_items, parent.stem)
+        elif init_query.suffixes[0] == ".legacy":
+            folder_str = encode_script(init_query, 0, folder_items, parent.stem)
+        else:
+            folder_str = encode_module(init_query, folder_items, parent.stem)
+    else:
+        folder_str = encode_folder(parent, folder_items)
 
     print("FINISHED", parent)
 
