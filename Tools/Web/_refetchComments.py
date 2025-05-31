@@ -5,9 +5,10 @@ import os
 from markdown_it import MarkdownIt
 import time
 import re
-from datetime import datetime
 
-print("WARNING: This decoder does not support extensive markdown or rich text or media embeds\n")
+#TODO: Implement better rich text and actual media formatting
+
+print("WARNING: This **REFETCHER** does NOT support markdown or rich text or media embeds\n")
 
 str_path = input("Enter file path, ex=[./file.json]\n:")
 name = input("Directory name\n:")
@@ -22,7 +23,7 @@ SECURE = "https://"
 SITE = "www.reddit.com"
 MD = MarkdownIt("gfm-like")
 MDS = MarkdownIt("commonmark", {"linkify":True})
-TO_DIR = f"./r#{name}/"
+TO_DIR = f"./{name}/"
 HTML = """<!DOCTYPE html>
 <html>
 <meta charset="UTF-8">
@@ -84,7 +85,7 @@ ul, #myUL {
 </head>
 <body>
 
-<small style="color:grey;font-family:Trebuchet MS;text-align:center;">by: u/%USER%<br>votes: %VOTES%<br>at: %DATE%</small>
+<small style="color:grey;font-family:Trebuchet MS;text-align:center;">by: u/%USER%<br>votes: %VOTES%</small>
 <br>
 <h2 style="font-family:Trebuchet MS;">%TITLE%</h2>
 
@@ -127,14 +128,11 @@ def html_video(src):
 def html_image(src):
     return f'<img class="autoed" src="{src}" alt="link to media">'
 
-def html_treeitem(message, auth, votes, date):
-    return f'<li><small style="color:grey;">by: u/{auth} - votes: {votes} - at: {date}</small><br>{message}</li><br>' + "\n"
+def html_treeitem(message, auth, votes):
+    return f'<li><small style="color:grey;">by: u/{auth} --- votes: {votes}</small><br>{message}</li><br>' + "\n"
 
-def html_tree(message, auth, votes, date):
-    return f'<li><span class="caret"><small style="color:grey;">by: u/{auth} - votes: {votes} - at: {date}</small><br>{message}</span><ul class="nested">' + "\n", '</ul></li><br>' + "\n"
-
-def get_time(created):
-    return str(datetime.fromtimestamp(created))
+def html_tree(message, auth, votes):
+    return f'<li><span class="caret"><small style="color:grey;">by: u/{auth} --- votes: {votes}</small><br>{message}</span><ul class="nested">' + "\n", '</ul></li><br>' + "\n"
 
 def get_comments(data):
     children = data["data"]["children"]
@@ -143,21 +141,17 @@ def get_comments(data):
         v = x["data"]
         message = MD.render(v["body"])
         votes = str(v["ups"] - v["downs"])
-        date = get_time(v["created"])
         auth = v["author"]
         if v.get("replies"):
-            t_start, t_end = html_tree(message, auth, votes, date)
+            t_start, t_end = html_tree(message, auth, votes)
             s += t_start + get_comments(v["replies"]) + t_end
         else:
-            s += html_treeitem(message, auth, votes, date)
+            s += html_treeitem(message, auth, votes)
     return s
 
 file = open(str_path, "r", encoding="utf-8")
 
 directory = Path(TO_DIR)
-if not directory.exists():
-    directory.mkdir()
-    print("CREATED DIRECTORY")
 
 decoded = json.load(file)
 
@@ -174,52 +168,21 @@ for post in posts:
     title = v["title"]
     body = v["selftext"]
     url = v["url"]
-    date = v["created"]
 
     file_dir = TO_DIR + auth
     if os.path.exists(file_dir):
-        encounters[file_dir] = int(encounters.get(file_dir) or "0") + 1
-        file_dir += f" [{encounters[file_dir]}]/"
+        encounters[file_dir] = int(encounters.get(file_dir) or "-1") + 1
+        if encounters[file_dir]:
+            file_dir += f" [{encounters[file_dir]}]/"
+        else:
+            file_dir += "/"
     else:
         file_dir += "/"
-    os.mkdir(file_dir)
 
-    source = url
-    if v.get("is_gallery") and v.get("gallery_data"):
-        gallery = v["gallery_data"]["items"]
-        source = ""
-        _link = v["permalink"].split("/")[-2]
-        for x in gallery:
-            source += html_iframe(f'https://preview.redd.it/{_link}-v0-{x["media_id"]}.png') + "<br>"
-    elif v.get("is_video"):
-        source = html_video(v["media"]["reddit_video"]["scrubber_media_url"])
-    elif v.get("media_embed"):
-        embed = re.search("src=\"(.+)\"", v["media_embed"]["content"])
-        source = html_iframe(embed.group(1))
-    else:
-        source = html_image(url)
-    
-    contents = HTML.replace(
-        "%SUB%", name
-    ).replace(
-        "%USER%", auth
-    ).replace(
-        "%SELF_BODY%", MD.render(body)
-    ).replace(
-        "%URL%", url
-    ).replace(
-        "%SRC%", source
-    ).replace(
-        "%TITLE%", title
-    ).replace(
-        "%VOTES%", str(v["ups"] - v["downs"])
-    ).replace(
-        "%CMT_AMOUNT%", str(v["num_comments"])
-    ).replace(
-        "%DATE%", get_time(date)
-    )
-
-    if v["num_comments"] > 0 and get_comment_flag == "y":
+    new = Path(file_dir + "index.html")
+    FAILED = "FAILED TO FETCH COMMENTS"
+    contents = new.read_text(encoding="utf-8")
+    if v["num_comments"] > 0 and get_comment_flag == "y" and FAILED in contents:
         time.sleep(each_time)
         if consecutive % 10 == 0:
             print("YIELDING...")
@@ -229,23 +192,13 @@ for post in posts:
             r.raise_for_status()
             print("GOT COMMENTS FOR", file_dir)
             r_decoded = json.loads(r.text)
-            contents = contents.replace("%COMMENTS%", get_comments(r_decoded[1]))
-            print("WROTE COMMENTS")
+            contents = contents.replace(FAILED, get_comments(r_decoded[1]))
+            print("REFETCHED:", file_dir)
         except:
             print("ERR: FAILED TO FETCH OR WRITE COMMENTS")
             errored += 1
-            contents = contents.replace("%COMMENTS%", "FAILED TO FETCH COMMENTS")
-        consecutive += 1
-    else:
-        contents = contents.replace("%COMMENTS%", "COMMENTS WERE NOT ENABLED")
-
-    with open(file_dir + "index.html", "w", encoding="utf-8") as new:
-        new.write(contents)
-    
-    print("ENCODED:", file_dir)
-
-with open(TO_DIR + "start.cmd", "w") as cmd_file:
-    cmd_file.write("start chrome \"http://localhost:8000\"\npython -m http.server")
+            consecutive += 1
+    new.write_text(contents, encoding="utf-8")
 
 if get_comment_flag == "y":
     print(f"\nSuccessful comment fetches: {len(posts) - errored}\nFailed comment fetches: {errored}\n")
