@@ -47,13 +47,17 @@ def encode_module(query, children="", name=""):
     return return_item + item2
 
 def encode_script(query, runContext=0, children="", name=""):
-    item1, item2 = xmlitem("Script")
+    script_class = "Script"
+    if runContext == 1:
+        script_class = "Script"
+    elif runContext == 2:
+        script_class = "LocalScript"
+    item1, item2 = xmlitem(script_class)
     prop1, prop2 = xmlproperties()
     name1, nameval, name2 = xmlproperty("string", "Name", name or query.stem.split(".")[0])
-    context1, contextval, context2 = xmlproperty("token", "RunContext", runContext)
     source1, sourceval, source2 = xmlproperty("ProtectedString", "Source", cdata(query.read_text()))
 
-    return_item = item1 + prop1 + name1 + nameval + name2 + context1 + contextval + context2 + source1 + sourceval + source2 + prop2
+    return_item = item1 + prop1 + name1 + nameval + name2 + source1 + sourceval + source2 + prop2
     if children:
         for v in children:
             return_item += v
