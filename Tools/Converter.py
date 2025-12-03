@@ -3,15 +3,54 @@ import re
 import zlib
 import base64
 
-option = input("Encode='E' Decode='D'\n:").upper()
-
 ENTRY_KEY = "$"
-
-_NAME = input("REQUIRED, Enter name to query folder/.txt file with, is=[str]\n:")
-_PATH = input("Folder path to query file within, default=\"\"\n:") or "."
-FOLDER_PATH = _PATH + "\\" + _NAME
-FILE_NAME = f"{_PATH}\\{_NAME}.txt"
 BS = "\\"
+NL = "\n"
+
+ALIASES = dict()
+alias_file = pathlib.Path(".aliases")
+if alias_file.exists():
+    alias_content = alias_file.read_text(encoding="utf-8").split("$")
+    alias_content.pop(0)
+    alias_content.pop()
+    for v in alias_content:
+        alias_properties = v.split("\n")
+        alias_properties.pop(0)
+        alias_properties.pop()
+        new_alias = dict()
+        for s in alias_properties:
+            prop = s.split("|")
+            assert len(prop) == 2
+            new_alias[prop[0]] = prop[1]
+        ALIASES[new_alias["name"]] = new_alias
+
+if True:
+    alias_log = "ALIASES:\n"
+    if len(ALIASES) > 1:
+        for s in ALIASES.values():
+            alias_log += "• "+ s["name"] + " {\n\tinput = \"" + s["input"] + "\"\n\toutput = \"" + s["output"] + "\"\n}\n"
+    else:
+        alias_log += "• No aliases found in current working directory"
+    print(alias_log + "\n")
+
+print("PLEASE ENTER OPTIONS BELOW:\n")
+
+option = input("Mode: Encode='E' Decode='D'\n:").upper()
+_NAME = input("Enter name to query folder/.txt file with, or an ALIAS, is=[str]\n:")
+_PATH = ""
+
+FOLDER_PATH = ""
+FILE_NAME = ""
+
+GOT_ALIAS = ALIASES.get(_NAME)
+if GOT_ALIAS:
+    print("\nGot alias \"" + GOT_ALIAS["name"] + "\"")
+    FOLDER_PATH = GOT_ALIAS["input"]
+    FILE_NAME = GOT_ALIAS["output"]
+else:
+    _PATH = input("Folder path to query file within, default=\"\"\n:") or "."
+    FOLDER_PATH = _PATH + "\\" + _NAME
+    FILE_NAME = f"{_PATH}\\{_NAME}.txt"
 
 file_contents = ''
 
@@ -74,4 +113,4 @@ elif option == 'D':
     f.close()
     input("... TASK FINISHED ...")
 else:
-    input("... Invalid input, input must be 'E' or 'D' ...")
+    input("... Invalid mode input, mode input must be 'E' (encode) or 'D' (decode) ...")
