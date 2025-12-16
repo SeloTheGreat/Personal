@@ -12,14 +12,14 @@ conn = client.HTTPSConnection(url) if conn_type == "HTTPS" else client.HTTPConne
 conn.request("GET", access)
 response = conn.getresponse()
 print("RESPONSE STATUS:", response.status, response.reason)
-txt = response.read().decode()
+contents = response.read()
 print("REQUEST COMPLETED")
 
-file = open(name, "w")
+file = open(name, "wb")
 print("CREATED FILE", name)
 
 print("WRITING TO FILE")
-file.write(txt)
+file.write(contents)
 file.close()
 conn.close()
 input("... TASK COMPLETE ...")

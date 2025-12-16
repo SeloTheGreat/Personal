@@ -18,14 +18,14 @@ for i in range(amount):
     conn.request("GET", f"{access}/split{i}.txt")
     response = conn.getresponse()
     print("RESPONSE STATUS:", response.status, response.reason)
-    txt = response.read().decode()
+    contents = response.read()
     print("REQUEST COMPLETED")
 
-    file = open(f"{name}/split{i}.txt", "w")
+    file = open(f"{name}/split{i}.txt", "wb")
     print("CREATED FILE", i)
 
     print("WRITING TO FILE")
-    file.write(txt)
+    file.write(contents)
     file.close()
     conn.close()
     print(i, "COMPLETE")
